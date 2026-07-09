@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VCE Solver Pilot — Results Board</title>
+</head>
+<body>
+<style>
+:root{
+  --paper:#FAF9F5; --ink:#1E2833; --ink-soft:#5A6675; --rule:#D9D5CB;
+  --card:#FFFFFF; --tick:#0E7C61; --tick-soft:#E3F0EB; --cross:#B3382E; --cross-soft:#F6E7E5;
+  --gold:#8A6D1F; --gold-soft:#F5EDD8; --chip:#EEEBE3; --bar:#0E7C61; --barbg:#E7E4DC;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#151A20; --ink:#E9E7E0; --ink-soft:#9AA4B0; --rule:#333B45;
+    --card:#1D242C; --tick:#4CBB98; --tick-soft:#1B3630; --cross:#E07C6E; --cross-soft:#3D2422;
+    --gold:#D9B95C; --gold-soft:#3A3220; --chip:#2A323C; --bar:#4CBB98; --barbg:#2A323C;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#151A20; --ink:#E9E7E0; --ink-soft:#9AA4B0; --rule:#333B45;
+  --card:#1D242C; --tick:#4CBB98; --tick-soft:#1B3630; --cross:#E07C6E; --cross-soft:#3D2422;
+  --gold:#D9B95C; --gold-soft:#3A3220; --chip:#2A323C; --bar:#4CBB98; --barbg:#2A323C;
+}
+:root[data-theme="light"]{
+  --paper:#FAF9F5; --ink:#1E2833; --ink-soft:#5A6675; --rule:#D9D5CB;
+  --card:#FFFFFF; --tick:#0E7C61; --tick-soft:#E3F0EB; --cross:#B3382E; --cross-soft:#F6E7E5;
+  --gold:#8A6D1F; --gold-soft:#F5EDD8; --chip:#EEEBE3; --bar:#0E7C61; --barbg:#E7E4DC;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Seravek","Avenir Next","Segoe UI",system-ui,sans-serif;
+  font-size:15px;line-height:1.55}
+.wrap{max-width:1080px;margin:0 auto;padding:32px 20px 80px}
+h1,h2,h3{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  text-wrap:balance;margin:0}
+h1{font-size:2rem;line-height:1.15}
+h2{font-size:1.35rem;margin:52px 0 6px;border-bottom:2px solid var(--rule);padding-bottom:8px}
+h3{font-size:1.02rem;margin:0 0 8px}
+.sub{color:var(--ink-soft);margin:8px 0 0;max-width:68ch}
+.eyebrow{font-size:.72rem;letter-spacing:.13em;text-transform:uppercase;color:var(--tick);font-weight:600}
+.meta{color:var(--ink-soft);font-size:.85rem;margin-top:4px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+.scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:8px;background:var(--card)}
+th{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-soft);
+  text-align:left;padding:10px 12px;border-bottom:2px solid var(--rule);white-space:nowrap}
+td{padding:9px 12px;border-bottom:1px solid var(--rule);vertical-align:middle;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+.mono{font-family:"Cascadia Code","SF Mono",Consolas,monospace;font-size:.86rem}
+.cfg{font-weight:600}
+.lead td{background:var(--gold-soft)}
+.chip{display:inline-block;padding:1px 9px;border-radius:999px;font-size:.8rem;font-weight:600}
+.up{background:var(--tick-soft);color:var(--tick)}
+.down{background:var(--cross-soft);color:var(--cross)}
+.flat{background:var(--chip);color:var(--ink-soft)}
+.sig{border:1.5px solid var(--tick);background:var(--tick-soft);color:var(--tick)}
+.seedtag{font-size:.72rem;font-weight:700;letter-spacing:.06em;color:var(--cross)}
+.bar{display:flex;align-items:center;gap:8px}
+.bar .track{width:110px;height:7px;border-radius:4px;background:var(--barbg);overflow:hidden;flex:none}
+.bar .fill{height:100%;background:var(--bar);border-radius:4px}
+.bar.gold .fill{background:var(--gold)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-top:16px}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:16px 16px 12px}
+.card h3 .val{color:var(--ink-soft);font-weight:400;font-size:.82rem}
+.card table{font-size:.84rem;width:100%}
+.card .tblwrap{overflow-x:auto}
+.card th{padding:6px 8px;font-size:.66rem}
+.card td{padding:6px 8px;white-space:normal}
+.card td .chip{white-space:nowrap}
+.note{background:var(--card);border-left:3px solid var(--tick);border-radius:0 8px 8px 0;
+  padding:12px 16px;margin:14px 0;max-width:75ch}
+.note.warn{border-left-color:var(--cross)}
+.note.gold{border-left-color:var(--gold)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:22px}
+.kpi{background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:14px 16px}
+.kpi .n{font-family:"Iowan Old Style",Palatino,Georgia,serif;font-size:1.7rem;line-height:1.1}
+.kpi .l{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);margin-top:3px}
+.kpi.tick .n{color:var(--tick)} .kpi.gold .n{color:var(--gold)}
+footer{margin-top:60px;color:var(--ink-soft);font-size:.8rem;border-top:1px solid var(--rule);padding-top:14px}
+@media (prefers-reduced-motion: no-preference){
+  .fill{transition:width .6s ease}
+}
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">VCE Mathematical Methods · Evaluation Gate · Stage C complete</div>
+  <h1>Pilot results board — candidate optimization</h1>
+  <p class="sub">Seven solver configurations, each GEPA-optimized where prompt-shaped headroom existed, every champion
+     confirmed by interleaved paired arms on the 108-part held-out test fold (15-second delivery wall).</p>
+  <p class="meta">2026-07-09 · 554-part dev corpus · McNemar on discordant pairs · n=108 certifies only ≥7–9pp per objective; full corpus (n≈1,400) certifies ~2pp</p>
+
+  <div class="kpis">
+    <div class="kpi gold"><div class="n">94.4%</div><div class="l">Board ceiling — opus-4.7-fast-low</div></div>
+    <div class="kpi tick"><div class="n">24 / 28</div><div class="l">Objective deltas positive</div></div>
+    <div class="kpi tick"><div class="n">p = .013</div><div class="l">gpt-5.5 syllabus (significant)</div></div>
+    <div class="kpi"><div class="n">$0.002–0.16</div><div class="l">Cost per part across pool</div></div>
+  </div>
+
+
+  <h2>0 · How to read this board</h2>
+  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">
+    <div class="card"><h3>Delivered</h3><p class="meta" style="white-space:normal">A part counts as delivered only if the solver submits a correct final answer <b>within the 15-second wall</b>. Correct-but-late scores zero, exactly like a student who runs out of time.</p></div>
+    <div class="card"><h3>Timeout</h3><p class="meta" style="white-space:normal">The solver failed to call <span class="mono">submit_answer</span> within 15 seconds of wall-clock time (model thinking + code execution + network, transport retries included). A timeout scores zero regardless of whether the maths would have been right.</p></div>
+    <div class="card"><h3>Seed vs champion</h3><p class="meta" style="white-space:normal"><b>Seed</b> = the hand-written starting system prompt, identical for every model. <b>Champion</b> = the prompt GEPA (reflective prompt evolution) produced for that specific model. Both arms solve the <em>same questions in the same minutes</em> (interleaved), so provider speed swings cancel out of the comparison.</p></div>
+    <div class="card"><h3>fixed : broke</h3><p class="meta" style="white-space:normal">Of the 108 test parts, how many the champion got right where the seed got wrong (<b>fixed</b>) versus got wrong where the seed had been right (<b>broke</b>). Parts where both agreed carry no information about the difference and are set aside. 12:7 means 19 parts changed outcome, net gain 5.</p></div>
+    <div class="card"><h3>McNemar p-value</h3><p class="meta" style="white-space:normal">The probability of a fixed:broke split at least this lopsided <b>if the prompt change actually did nothing</b> (each flip a fair coin). p=.013 means a 1.3% chance the result is luck; below .05 is conventionally significant. With only 10-20 flips per run, real effects of a few points often cannot reach .05 - a sample-size limit, not evidence of no effect.</p></div>
+    <div class="card"><h3>Val vs held-out</h3><p class="meta" style="white-space:normal"><b>Val</b> (110 parts) is what the optimizer scores its candidates on - in-sample to selection, always flatters. <b>Held-out</b> (108 parts, never seen during optimization) is the honest test; every promotion decision uses held-out numbers only.</p></div>
+    <div class="card"><h3>Latency statistics</h3><p class="meta" style="white-space:normal"><b>Compute time</b> = wall-clock minus transport-retry backoff. <b>min / median / mean / p95 / max</b> are over <em>completed</em> solves only - timed-out parts are censored at the wall (we only know they needed more than 15s), so they count separately as timeouts rather than polluting the distribution. p95 = 95% of completed solves were at least this fast.</p></div>
+    <div class="card"><h3>Objectives (scoring rubric)</h3><p class="meta" style="white-space:normal"><b>correctness</b>: value matches gold (rule grader, LLM-judge rescue for equivalent forms). <b>form</b>: answer in the required form - exact vs decimal, MC letter only, units where the reference carries them; official VCAA award criteria authoritative where they exist. <b>method</b>: working mathematically sound end to end. <b>syllabus</b>: method inside the study design (aligned 1 / partial 0.5 / off 0).</p></div>
+  </div>
+
+  <h2>1 · Headline board — delivered correctness (held-out fold)</h2>
+  <p class="sub">Best configuration per model. “Delivered” = correct answer submitted within the 15-second wall.</p>
+  <div class="scroll" style="margin-top:14px">
+  <table>
+    <thead><tr>
+      <th>#</th><th>Config</th><th>Seed</th><th>Champion</th><th>Δ</th>
+      <th>Timeouts s→c</th><th>Mean compute</th><th>p95</th><th>$/part</th><th>Routes with</th>
+    </tr></thead>
+    <tbody>
+      <tr class="lead"><td class="mono">1</td><td class="cfg">opus-4.7-fast-low</td><td class="mono">92.6%</td>
+        <td><div class="bar gold"><div class="track"><div class="fill" style="width:94.4%"></div></div><b class="mono">94.4%</b></div></td>
+        <td><span class="chip up">+1.9</span></td><td class="mono">2 → 1</td><td class="mono">7.2s</td><td class="mono">—</td><td class="mono">$0.162</td><td>champion</td></tr>
+      <tr><td class="mono">2</td><td class="cfg">gemini-3.5 zero-think (direct)</td><td class="mono">88.9%*</td>
+        <td><div class="bar"><div class="track"><div class="fill" style="width:89.8%"></div></div><b class="mono">89.8%</b></div></td>
+        <td><span class="chip up">+0.9</span></td><td class="mono">8 → 6</td><td class="mono">10.1s</td><td class="mono">—</td><td class="mono">~$0.005</td><td>champion</td></tr>
+      <tr><td class="mono">3</td><td class="cfg">gpt-5.4-low</td><td class="mono">85.2%</td>
+        <td><div class="bar"><div class="track"><div class="fill" style="width:88%"></div></div><b class="mono">88.0%</b></div></td>
+        <td><span class="chip up">+2.8</span></td><td class="mono">11 → 11</td><td class="mono">8.9s <span class="meta">(9.4 seed)</span></td><td class="mono">12.1s</td><td class="mono">$0.011</td><td>champion</td></tr>
+      <tr><td class="mono">4</td><td class="cfg">opus-4.8-fast-low</td><td class="mono">81.5%</td>
+        <td><div class="bar"><div class="track"><div class="fill" style="width:87%"></div></div><b class="mono">87.0%</b></div></td>
+        <td><span class="chip up">+5.6</span></td><td class="mono">5 → 3</td><td class="mono">7.3s</td><td class="mono">—</td><td class="mono">$0.043</td><td>champion</td></tr>
+      <tr><td class="mono">5</td><td class="cfg">gpt-5.5 (no reasoning)</td><td class="mono">81.5%</td>
+        <td><div class="bar"><div class="track"><div class="fill" style="width:86.1%"></div></div><b class="mono">86.1%</b></div></td>
+        <td><span class="chip up">+4.6</span></td><td class="mono"><b>15 → 4</b></td><td class="mono">8.2s <span class="meta">(9.2 seed)</span></td><td class="mono">11.2s</td><td class="mono">$0.024</td><td>champion</td></tr>
+      <tr><td class="mono">6</td><td class="cfg">gpt-oss-120b paid (medium)</td><td class="mono">80.6%</td>
+        <td><div class="bar"><div class="track"><div class="fill" style="width:85.2%"></div></div><b class="mono">85.2%</b></div></td>
+        <td><span class="chip up">+4.6</span></td><td class="mono">0 → 0</td><td class="mono">4.0s</td><td class="mono">—</td><td class="mono"><b>$0.002</b></td><td>champion</td></tr>
+      <tr><td class="mono">7</td><td class="cfg">gpt-5.4 (no reasoning)</td><td class="mono">85.2%</td>
+        <td><div class="bar"><div class="track"><div class="fill" style="width:86.1%"></div></div><b class="mono">86.1%</b></div></td>
+        <td><span class="chip flat">+0.9 · null ×4</span></td><td class="mono">8 → 5</td><td class="mono">8.2s</td><td class="mono">—</td><td class="mono">$0.015</td><td><span class="seedtag">SEED</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="meta">*gemini seed variance: first probe 81.5% / 16 timeouts vs confirmation-day 88.9% / 8 — direct-endpoint load swing. Paired deltas are same-window and unaffected; treat gemini’s absolute level as ±4pp until full-corpus n.</p>
+
+  <h3 style="margin-top:28px">Excluded configurations (probed)</h3>
+  <div class="scroll" style="margin-top:10px">
+  <table>
+    <thead><tr><th>Config</th><th>Delivered</th><th>Timeouts</th><th>Compute</th><th>$/part</th><th>Why excluded</th></tr></thead>
+    <tbody>
+      <tr><td class="cfg">sonnet-5 (best of 4: minimal)</td><td class="mono">75.0%</td><td class="mono">24</td><td class="mono">10.6s</td><td class="mono">~$0.007</td><td>thinking floor ≈10.6s; reasoning-none = 41.7%</td></tr>
+      <tr><td class="cfg">gemini-3.5 via OpenRouter (low/min)</td><td class="mono">74.1%</td><td class="mono">25–26</td><td class="mono">11.1s</td><td class="mono">$0.012</td><td>dominated by direct zero-think</td></tr>
+      <tr><td class="cfg">gemini-3-flash-preview direct 0-think</td><td class="mono">61.1%</td><td class="mono">38</td><td class="mono">11.1s</td><td class="mono">—</td><td>generation speed, not thinking</td></tr>
+      <tr><td class="cfg">gpt-oss high effort</td><td class="mono">78.7%</td><td class="mono">1</td><td class="mono">4.5s</td><td class="mono">~$0.002</td><td>−4.6pp vs medium</td></tr>
+      <tr><td class="cfg">gpt-oss low effort</td><td class="mono">81.5%</td><td class="mono">0</td><td class="mono">3.6s</td><td class="mono">~$0.002</td><td>−1.8pp vs medium</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>2 · Rubric statistics per run</h2>
+  <p class="sub">Interleaved paired test fold, 108 parts. Objectives: <b>correctness</b> (rule grade + judge rescue), <b>form</b> (required form + contextual units; official VCAA award criteria authoritative), <b>method</b> (working soundness), <b>syllabus</b> (aligned 1 / partial 0.5 / off 0). Format: seed → champion · fixed:broke · McNemar p.</p>
+
+  <div class="grid">
+    <div class="card">
+      <h3>Run 1 · gpt-oss paid <span class="val">· teacher gemini-3.1-pro · val .774→.870</span></h3>
+      <div class="tblwrap"><table>
+        <tr><th>Objective</th><th>seed → champ</th><th>f:b</th><th>p</th></tr>
+        <tr><td>correctness</td><td class="mono">.806→.852 <span class="chip up">+4.6</span></td><td class="mono">12:7</td><td class="mono">.359</td></tr>
+        <tr><td>form</td><td class="mono">.685→.769 <span class="chip up">+8.3</span></td><td class="mono">18:9</td><td class="mono">.122</td></tr>
+        <tr><td>method</td><td class="mono">.806→.833 <span class="chip up">+2.8</span></td><td class="mono">11:8</td><td class="mono">.648</td></tr>
+        <tr><td>syllabus</td><td class="mono">.866→.931 <span class="chip up">+6.5</span></td><td class="mono">11:3</td><td class="mono"><b>.057</b></td></tr>
+      </table></div>
+    </div>
+    <div class="card">
+      <h3>Run 2 · gpt-5.5 <span class="val">· teacher gemini-3.1-pro · val .640→.865</span></h3>
+      <div class="tblwrap"><table>
+        <tr><th>Objective</th><th>seed → champ</th><th>f:b</th><th>p</th></tr>
+        <tr><td>correctness</td><td class="mono">.815→.861 <span class="chip up">+4.6</span></td><td class="mono">9:4</td><td class="mono">.267</td></tr>
+        <tr><td>form</td><td class="mono">.759→.843 <span class="chip up">+8.3</span></td><td class="mono">14:5</td><td class="mono"><b>.064</b></td></tr>
+        <tr><td>method</td><td class="mono">.833→.889 <span class="chip up">+5.6</span></td><td class="mono">10:4</td><td class="mono">.180</td></tr>
+        <tr><td>syllabus</td><td class="mono">.824→.921 <span class="chip sig">+9.7 · p=.013</span></td><td class="mono">14:3</td><td class="mono"><b>.013</b></td></tr>
+      </table></div>
+      <p class="meta">Timeouts 15→4 (−73%) — the wall misbehaviour was the headroom. First significant strong-model gain.</p>
+    </div>
+    <div class="card">
+      <h3>Run 3 · gpt-5.4 <span class="val">· teacher gemini-3.1-pro · val .836→.879</span></h3>
+      <div class="tblwrap"><table>
+        <tr><th>Objective</th><th>seed → champ</th><th>f:b</th><th>p</th></tr>
+        <tr><td>correctness</td><td class="mono">.852→.861 <span class="chip flat">+0.9</span></td><td class="mono">6:5</td><td class="mono">1.00</td></tr>
+        <tr><td>form</td><td class="mono">.787→.806 <span class="chip flat">+1.9</span></td><td class="mono">8:6</td><td class="mono">.791</td></tr>
+        <tr><td>method</td><td class="mono">.880→.852 <span class="chip down">−2.8</span></td><td class="mono">6:9</td><td class="mono">.607</td></tr>
+        <tr><td>syllabus</td><td class="mono">.884→.907 <span class="chip flat">+2.3</span></td><td class="mono">7:5</td><td class="mono">.774</td></tr>
+      </table></div>
+      <p class="meta">Fourth consecutive null (single-objective, transfer, native, re-try). Verdict final: routes at seed.</p>
+    </div>
+    <div class="card">
+      <h3>Run 4 · gpt-5.4-low <span class="val">· teacher gemini-3.1-pro · val .739→.819</span></h3>
+      <div class="tblwrap"><table>
+        <tr><th>Objective</th><th>seed → champ</th><th>f:b</th><th>p</th></tr>
+        <tr><td>correctness</td><td class="mono">.852→.880 <span class="chip up">+2.8</span></td><td class="mono">5:2</td><td class="mono">.453</td></tr>
+        <tr><td>form</td><td class="mono">.796→.824 <span class="chip up">+2.8</span></td><td class="mono">8:5</td><td class="mono">.581</td></tr>
+        <tr><td>method</td><td class="mono">.861→.880 <span class="chip up">+1.9</span></td><td class="mono">6:4</td><td class="mono">.754</td></tr>
+        <tr><td>syllabus</td><td class="mono">.875→.875 <span class="chip flat">0.0</span></td><td class="mono">5:5</td><td class="mono">1.00</td></tr>
+      </table></div>
+      <p class="meta">Timeouts unchanged 11→11 — unlike 5.5, the champion did not fix the wall.</p>
+    </div>
+    <div class="card">
+      <h3>Run 5 · gemini-3.5 zero-think <span class="val">· teacher opus-4.8 · val .745→.866</span></h3>
+      <div class="tblwrap"><table>
+        <tr><th>Objective</th><th>seed → champ</th><th>f:b</th><th>p</th></tr>
+        <tr><td>correctness</td><td class="mono">.889→.898 <span class="chip flat">+0.9</span></td><td class="mono">3:2</td><td class="mono">1.00</td></tr>
+        <tr><td>form</td><td class="mono">.852→.870 <span class="chip flat">+1.9</span></td><td class="mono">5:3</td><td class="mono">.727</td></tr>
+        <tr><td>method</td><td class="mono">.917→.917 <span class="chip flat">0.0</span></td><td class="mono">1:1</td><td class="mono">1.00</td></tr>
+        <tr><td>syllabus</td><td class="mono">.903→.921 <span class="chip flat">+1.9</span></td><td class="mono">3:1</td><td class="mono">.625</td></tr>
+      </table></div>
+      <p class="meta">Timeouts 8→6. Seed already strong on confirmation day (variance note above).</p>
+    </div>
+    <div class="card">
+      <h3>Run 6 · opus-4.8-fast-low <span class="val">· teacher gemini-3.1-pro · val .822→.863</span></h3>
+      <div class="tblwrap"><table>
+        <tr><th>Objective</th><th>seed → champ</th><th>f:b</th><th>p</th></tr>
+        <tr><td>correctness</td><td class="mono">.815→.870 <span class="chip up">+5.6</span></td><td class="mono">12:6</td><td class="mono">.238</td></tr>
+        <tr><td>form</td><td class="mono">.741→.815 <span class="chip up">+7.4</span></td><td class="mono">14:6</td><td class="mono">.115</td></tr>
+        <tr><td>method</td><td class="mono">.806→.861 <span class="chip up">+5.6</span></td><td class="mono">13:7</td><td class="mono">.263</td></tr>
+        <tr><td>syllabus</td><td class="mono">.838→.875 <span class="chip up">+3.7</span></td><td class="mono">10:6</td><td class="mono">.454</td></tr>
+      </table></div>
+      <p class="meta">Timeouts 5→3. Largest opus gain — every objective positive.</p>
+    </div>
+    <div class="card">
+      <h3>Run 7 · opus-4.7-fast-low <span class="val">· teacher gemini-3.1-pro · val .870→.891</span></h3>
+      <div class="tblwrap"><table>
+        <tr><th>Objective</th><th>seed → champ</th><th>f:b</th><th>p</th></tr>
+        <tr><td>correctness</td><td class="mono">.926→.944 <span class="chip up">+1.9</span></td><td class="mono">3:1</td><td class="mono">.625</td></tr>
+        <tr><td>form</td><td class="mono">.880→.880 <span class="chip flat">0.0</span></td><td class="mono">4:4</td><td class="mono">1.00</td></tr>
+        <tr><td>method</td><td class="mono">.935→.954 <span class="chip up">+1.9</span></td><td class="mono">5:3</td><td class="mono">.727</td></tr>
+        <tr><td>syllabus</td><td class="mono">.958→.968 <span class="chip flat">+0.9</span></td><td class="mono">2:1</td><td class="mono">1.00</td></tr>
+      </table></div>
+      <p class="meta">Timeouts 2→1. Board ceiling: 94.4% delivered · method 95.4% · syllabus 96.8%.</p>
+    </div>
+  </div>
+
+  <h2>3 · Latency distributions - full pool, one measurement window (2026-07-09, 108 parts each)</h2>
+  <p class="sub">Statistics over completed solves (timeouts censored at the 15s wall, counted separately). All configs measured back-to-back in the same window so they compare with each other; the confirmation tables above were measured in their own windows. From this date every API call also logs its duration to the usage ledger, so raw per-call latency is permanently recorded.</p>
+  <div class="scroll" style="margin-top:12px">
+  <table>
+    <thead><tr><th>Config</th><th>Min</th><th>Median</th><th>Mean</th><th>p95</th><th>Max</th><th>Timeouts /108</th><th>$/part (window)</th></tr></thead>
+    <tbody>
+      <tr><td class="cfg">opus-4.7-fast-low+champ &#9888;</td><td class="mono">3.4s</td><td class="mono">6.2s</td><td class="mono">6.6s</td><td class="mono">11.6s</td><td class="mono">14.0s</td><td class="mono">49</td><td class="mono">$0.1402</td></tr>
+      <tr><td class="cfg">gemini-3.5-0think+champ</td><td class="mono">3.6s</td><td class="mono">7.2s</td><td class="mono">7.9s</td><td class="mono">12.7s</td><td class="mono">13.8s</td><td class="mono">5</td><td class="mono">$0.0037</td></tr>
+      <tr><td class="cfg">gpt-5.4-low+champ</td><td class="mono">5.1s</td><td class="mono">8.2s</td><td class="mono">8.6s</td><td class="mono">11.9s</td><td class="mono">14.4s</td><td class="mono">10</td><td class="mono">$0.0115</td></tr>
+      <tr><td class="cfg">opus-4.8-fast-low+champ</td><td class="mono">3.5s</td><td class="mono">5.7s</td><td class="mono">6.2s</td><td class="mono">10.0s</td><td class="mono">13.5s</td><td class="mono">2</td><td class="mono">$0.0574</td></tr>
+      <tr><td class="cfg">gpt-5.5+champ</td><td class="mono">4.5s</td><td class="mono">7.8s</td><td class="mono">8.2s</td><td class="mono">11.9s</td><td class="mono">15.0s</td><td class="mono">3</td><td class="mono">$0.0190</td></tr>
+      <tr><td class="cfg">gpt-oss-paid+champ</td><td class="mono">1.6s</td><td class="mono">3.6s</td><td class="mono">4.2s</td><td class="mono">8.5s</td><td class="mono">14.2s</td><td class="mono">2</td><td class="mono">~$0.002 est*</td></tr>
+      <tr><td class="cfg">gpt-5.4 seed</td><td class="mono">4.9s</td><td class="mono">8.0s</td><td class="mono">8.1s</td><td class="mono">12.8s</td><td class="mono">15.0s</td><td class="mono">5</td><td class="mono">$0.0081</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="note warn"><b>&#9888; opus-4.7-fast-low availability incident.</b> In this window it timed out on 49 of 108 parts, versus 1-2 on confirmation day - while its <em>completed</em> solves stayed fast (median 6.2s). That is provider-side congestion on the fast endpoint, not the prompt or the model. Consequence for routing: the board leader has real availability variance; the route table needs a fallback (opus-4.8-fast-low - median 5.7s, 2 timeouts, one quarter the price - is the natural understudy).</div>
+  <p class="meta">*gpt-oss via Cerebras direct returns no usage cost in the API response; ~$0.002/part from the Cerebras price sheet. Champion prompts add input tokens, so champion $/part runs above seed $/part for every model (gpt-5.5: $0.013 seed vs $0.024 champion, measured 2026-07-09).</p>
+
+  <h2>4 · Cross-run reading</h2>
+  <div class="note gold"><b>Mechanism (established across all seven students).</b> Prompt optimization fixes <b>behaviour under the 15-second wall</b> — turn discipline, timeouts, answer form, syllabus style — not mathematical skill. Gains scale with prompt-shaped misbehaviour: gpt-5.5 (timeouts) and opus-4.8-fast-low (form/method style) gained most; gpt-5.4-none, already disciplined, gained nothing in four attempts.</div>
+  <div class="note"><b>Statistics honesty.</b> Only run-2 syllabus certifies at n=108 (p=.013). The stronger evidence is the pattern: 24 of 28 objective deltas positive (the single negative cell belongs to the null model). A null lever does not produce that. Per-objective certification arrives at full-corpus n≈1,400 (~2pp detectable).</div>
+  <div class="note warn"><b>Costs.</b> GEPA runs (est.; universal ledger live from late 2026-07-09): cheap students $15–30 · opus-4.8-fast-low ≈ $90 · opus-4.7-fast-low ≈ $260 across restarts · gemini ≈ $50 (opus teacher). Confirmations $6–10 each. All spend now flows through <span class="mono">usage_ledger.jsonl</span> per role × model.</div>
+
+  <footer>Source: <span class="mono">reports/gate/stage_c/RESULTS_BOARD.md</span> · tutor-agent-bot · verified reference bank v3 · equation-complete VCAA syllabus · official marking criteria (A/H judged, M retained-disabled) · paired code+working exemplars (capable-model authored)</footer>
+</div>
+
+</body>
+</html>
