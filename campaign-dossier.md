@@ -210,10 +210,127 @@ windows 68.5-74.1%; first window breached transport acceptance and was discarded
 near-wall ~10s medians make it acutely load-sensitive. Paired deltas are same-window
 and unaffected by either.
 
-Per-objective rubric results (seed → champion, fixed:broke, p) for all eight runs are
-in `RESULTS_BOARD.md` section 2. Highlights: run 2 syllabus +9.7pp p=0.013 (the only
-single-cell certification at pilot power); run 8 form +10.2pp p=0.090; run 3's -2.8pp
-method is the single negative cell of 32 and belongs to the null model.
+### Per-run rubric tables (held-out, interleaved, 108 parts; seed → champion, fixed:broke, McNemar p)
+
+"val" figures are the optimizer's internal composite trajectory — in-sample, context
+only. Objectives: correctness (rule grade + judge rescue), form (required form +
+contextual units, official criteria authoritative), method (working soundness),
+syllabus (ALIGNED=1 / PARTIAL=0.5 / OFF=0).
+
+**Run 1 — gpt-oss-120b paid, teacher gemini-3.1-pro (val 0.774 → 0.870)**
+
+| Objective | seed → champ | fixed:broke | p |
+|---|---|---|---|
+| correctness | 0.806 → 0.852 (+4.6) | 12:7 | 0.359 |
+| form | 0.685 → 0.769 (+8.3) | 18:9 | 0.122 |
+| method | 0.806 → 0.833 (+2.8) | 11:8 | 0.648 |
+| syllabus | 0.866 → 0.931 (+6.5) | 11:3 | 0.057 |
+
+Third consecutive all-positive replication on this student. Timeouts 0 → 0.
+
+**Run 2 — gpt-5.5-none, teacher gemini-3.1-pro (val 0.640 → 0.865)**
+
+| Objective | seed → champ | fixed:broke | p |
+|---|---|---|---|
+| correctness | 0.815 → 0.861 (+4.6) | 9:4 | 0.267 |
+| form | 0.759 → 0.843 (+8.3) | 14:5 | 0.064 |
+| method | 0.833 → 0.889 (+5.6) | 10:4 | 0.180 |
+| syllabus | 0.824 → 0.921 (+9.7) | 14:3 | **0.013** |
+
+Timeouts 15 → 4 (−73%): the low val baseline was wall misbehaviour; the champion fixed
+the behaviour. The only single-cell certification at pilot power.
+
+**Run 3 — gpt-5.4-none, teacher gemini-3.1-pro (val 0.836 → 0.879)**
+
+| Objective | seed → champ | fixed:broke | p |
+|---|---|---|---|
+| correctness | 0.852 → 0.861 (+0.9) | 6:5 | 1.000 |
+| form | 0.787 → 0.806 (+1.9) | 8:6 | 0.791 |
+| method | 0.880 → 0.852 (−2.8) | 6:9 | 0.607 |
+| syllabus | 0.884 → 0.907 (+2.3) | 7:5 | 0.774 |
+
+Fourth consecutive null on this model (single-objective, cross-model transfer, native
+multi-objective, code-exemplar re-try). Verdict FINAL at pilot scale: routes at seed.
+Its −2.8pp method is the single negative cell of the campaign's 32.
+
+**Run 4 — gpt-5.4-low, teacher gemini-3.1-pro (val 0.739 → 0.819)**
+
+| Objective | seed → champ | fixed:broke | p |
+|---|---|---|---|
+| correctness | 0.852 → 0.880 (+2.8) | 5:2 | 0.453 |
+| form | 0.796 → 0.824 (+2.8) | 8:5 | 0.581 |
+| method | 0.861 → 0.880 (+1.9) | 6:4 | 0.754 |
+| syllabus | 0.875 → 0.875 (0.0) | 5:5 | 1.000 |
+
+Timeouts unchanged 11 → 11 — unlike gpt-5.5, this champion did not fix the wall.
+
+**Run 5 — gemini-3.5 zero-thinking direct, teacher opus-4.8 (val 0.745 → 0.866)**
+
+| Objective | seed → champ | fixed:broke | p |
+|---|---|---|---|
+| correctness | 0.889 → 0.898 (+0.9) | 3:2 | 1.000 |
+| form | 0.852 → 0.870 (+1.9) | 5:3 | 0.727 |
+| method | 0.917 → 0.917 (0.0) | 1:1 | 1.000 |
+| syllabus | 0.903 → 0.921 (+1.9) | 3:1 | 0.625 |
+
+Timeouts 8 → 6. Seed already strong on confirmation day (variance note ¹ above).
+
+**Run 6 — opus-4.8-fast-low, teacher gemini-3.1-pro (val 0.822 → 0.863)**
+
+| Objective | seed → champ | fixed:broke | p |
+|---|---|---|---|
+| correctness | 0.815 → 0.870 (+5.6) | 12:6 | 0.238 |
+| form | 0.741 → 0.815 (+7.4) | 14:6 | 0.115 |
+| method | 0.806 → 0.861 (+5.6) | 13:7 | 0.263 |
+| syllabus | 0.838 → 0.875 (+3.7) | 10:6 | 0.454 |
+
+Timeouts 5 → 3. Largest opus gain — every objective positive.
+
+**Run 7 — opus-4.7-fast-low, teacher gemini-3.1-pro (val 0.870 → 0.891)**
+
+| Objective | seed → champ | fixed:broke | p |
+|---|---|---|---|
+| correctness | 0.926 → 0.944 (+1.9) | 3:1 | 0.625 |
+| form | 0.880 → 0.880 (0.0) | 4:4 | 1.000 |
+| method | 0.935 → 0.954 (+1.9) | 5:3 | 0.727 |
+| syllabus | 0.958 → 0.968 (+0.9) | 2:1 | 1.000 |
+
+Timeouts 2 → 1. Board ceiling: 94.4% delivered, method 95.4%, syllabus 96.8%.
+
+**Run 8 — gpt-5.6-terra-none, teacher gemini-3.1-pro (val 0.597 → 0.850)**
+
+| Objective | seed → champ | fixed:broke | p |
+|---|---|---|---|
+| correctness | 0.741 → 0.778 (+3.7) | 15:11 | 0.557 |
+| form | 0.630 → 0.731 (+10.2) | 23:12 | 0.090 |
+| method | 0.731 → 0.806 (+7.4) | 20:12 | 0.215 |
+| syllabus | 0.787 → 0.843 (+5.6) | 15:9 | 0.307 |
+
+Timeouts 20 → 11 (−45%). First confirm window breached transport acceptance (27/108
+seed timeouts) and was discarded; both windows agreed directionally (all 8 deltas
+positive across the two). Run cost ≈ $37 all-in per the ledger.
+
+### Latency distributions — full pool, one shared window (2026-07-09, 108 parts each)
+
+Statistics over completed solves; timeouts censored at the 15s wall, counted
+separately. All configs measured back-to-back in the SAME window so they compare with
+each other (the confirmation tables above are each their own window).
+
+| Config | Min | Median | Mean | p95 | Max | Timeouts /108 | $/part (window) |
+|---|---|---|---|---|---|---|---|
+| opus-4.7-fast-low+champ ⚠ | 3.4s | 6.2s | 6.6s | 11.6s | 14.0s | 49 | $0.1402 |
+| gemini-3.5-0think+champ | 3.6s | 7.2s | 7.9s | 12.7s | 13.8s | 5 | $0.0037 |
+| gpt-5.4-low+champ | 5.1s | 8.2s | 8.6s | 11.9s | 14.4s | 10 | $0.0115 |
+| opus-4.8-fast-low+champ | 3.5s | 5.7s | 6.2s | 10.0s | 13.5s | 2 | $0.0574 |
+| gpt-5.5+champ | 4.5s | 7.8s | 8.2s | 11.9s | 15.0s | 3 | $0.0190 |
+| gpt-oss-paid+champ | 1.6s | 3.6s | 4.2s | 8.5s | 14.2s | 2 | ~$0.002 est |
+| gpt-5.4 seed | 4.9s | 8.0s | 8.1s | 12.8s | 15.0s | 5 | $0.0081 |
+| gpt-5.6-terra-none seed (separate window, same fold) | 7.7s | 9.9s | — | 11.8s | 14.8s | 8 | $0.0064 |
+
+⚠ The 49-timeout opus-4.7 figure is the availability incident of finding 15: in this
+window the provider's fast endpoint timed out on 49 of 108 parts while completed solves
+stayed fast (median 6.2s) — provider congestion, not the prompt or the model. It is why
+the production configuration carries a fallback chain.
 
 **Champion latency effect:** champions are FASTER than seeds despite longer prompts
 (gpt-5.5 mean 9.2→8.2s) because turn discipline dominates added input tokens; they cost
