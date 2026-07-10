@@ -163,10 +163,14 @@ footer{margin-top:60px;color:var(--ink-soft);font-size:.8rem;border-top:1px soli
       <tr><td class="mono">7</td><td class="cfg">gpt-5.4 (no reasoning)</td><td class="mono">85.2%</td>
         <td><div class="bar"><div class="track"><div class="fill" style="width:86.1%"></div></div><b class="mono">86.1%</b></div></td>
         <td><span class="chip flat">+0.9 · null ×4</span></td><td class="mono">8 → 5</td><td class="mono">8.2s</td><td class="mono">—</td><td class="mono">$0.015</td><td><span class="seedtag">SEED</span></td></tr>
+      <tr><td class="mono">8</td><td class="cfg">gpt-5.6-terra (no reasoning)</td><td class="mono">74.1%**</td>
+        <td><div class="bar"><div class="track"><div class="fill" style="width:77.8%"></div></div><b class="mono">77.8%</b></div></td>
+        <td><span class="chip up">+3.7</span></td><td class="mono"><b>20 → 11</b></td><td class="mono">med 9.9s <span class="meta">(probe)</span></td><td class="mono">11.8s</td><td class="mono">$0.0064 seed</td><td>champion</td></tr>
     </tbody>
   </table>
   </div>
   <p class="meta">*gemini seed variance: first probe 81.5% / 16 timeouts vs confirmation-day 88.9% / 8 — direct-endpoint load swing. Paired deltas are same-window and unaffected; treat gemini’s absolute level as ±4pp until full-corpus n.</p>
+  <p class="meta">**terra window variance (worse than gemini’s): morning probe 85.2% / 8 timeouts; first confirm window 68.5% seed / 27 timeouts (breached the 20% transport bar, discarded); accepted window 74.1% / 20. Near-wall medians (~10s) make terra acutely load-sensitive — absolute level swings ~11pp with provider load. Paired deltas are same-window and unaffected.</p>
 
   <h3 style="margin-top:28px">Excluded configurations (probed)</h3>
   <div class="scroll" style="margin-top:10px">
@@ -178,8 +182,7 @@ footer{margin-top:60px;color:var(--ink-soft);font-size:.8rem;border-top:1px soli
       <tr><td class="cfg">gemini-3-flash-preview direct 0-think</td><td class="mono">61.1%</td><td class="mono">38</td><td class="mono">11.1s</td><td class="mono">—</td><td>generation speed, not thinking</td></tr>
       <tr><td class="cfg">gpt-oss high effort</td><td class="mono">78.7%</td><td class="mono">1</td><td class="mono">4.5s</td><td class="mono">~$0.002</td><td>−4.6pp vs medium</td></tr>
       <tr><td class="cfg">gpt-oss low effort</td><td class="mono">81.5%</td><td class="mono">0</td><td class="mono">3.6s</td><td class="mono">~$0.002</td><td>−1.8pp vs medium</td></tr>
-      <tr><td class="cfg">gpt-5.6-terra none (probed 2026-07-10)</td><td class="mono">85.2%</td><td class="mono">8</td><td class="mono">med 9.9s / p95 11.8s</td><td class="mono">$0.0064</td><td>recorded (fallback-chain diversity); ties gpt-oss champion at 3× price; no GEPA at pilot n</td></tr>
-      <tr><td class="cfg">gpt-5.6-sol none</td><td class="mono">84.3%</td><td class="mono">8</td><td class="mono">med 11.3s / p95 14.0s</td><td class="mono">$0.0130</td><td>dominated by terra (2× price, −0.9pp)</td></tr>
+      <tr><td class="cfg">gpt-5.6-sol none</td><td class="mono">84.3%</td><td class="mono">8</td><td class="mono">med 11.3s / p95 14.0s</td><td class="mono">$0.0130</td><td>dominated by terra (2× price, −0.9pp); terra promoted to board row 8 after GEPA run 8</td></tr>
       <tr><td class="cfg">gpt-5.6-luna none</td><td class="mono">79.6%</td><td class="mono">8</td><td class="mono">med 10.0s / p95 13.0s</td><td class="mono">$0.0027</td><td>worst of the 5.6 series</td></tr>
     </tbody>
   </table>
@@ -265,6 +268,17 @@ footer{margin-top:60px;color:var(--ink-soft);font-size:.8rem;border-top:1px soli
       </table></div>
       <p class="meta">Timeouts 2→1. Board ceiling: 94.4% delivered · method 95.4% · syllabus 96.8%.</p>
     </div>
+    <div class="card">
+      <h3>Run 8 · gpt-5.6-terra <span class="val">· teacher gemini-3.1-pro · val .597→.850</span></h3>
+      <div class="tblwrap"><table>
+        <tr><th>Objective</th><th>seed → champ</th><th>f:b</th><th>p</th></tr>
+        <tr><td>correctness</td><td class="mono">.741→.778 <span class="chip up">+3.7</span></td><td class="mono">15:11</td><td class="mono">.557</td></tr>
+        <tr><td>form</td><td class="mono">.630→.731 <span class="chip up">+10.2</span></td><td class="mono">23:12</td><td class="mono"><b>.090</b></td></tr>
+        <tr><td>method</td><td class="mono">.731→.806 <span class="chip up">+7.4</span></td><td class="mono">20:12</td><td class="mono">.215</td></tr>
+        <tr><td>syllabus</td><td class="mono">.787→.843 <span class="chip up">+5.6</span></td><td class="mono">15:9</td><td class="mono">.307</td></tr>
+      </table></div>
+      <p class="meta">Timeouts 20→11 (−45%). First confirm window breached transport acceptance (27/108 seed timeouts) and was discarded; both windows agreed directionally (all 8 deltas positive). Run cost ≈ $37 all-in (ledger).</p>
+    </div>
   </div>
 
   <h2>3 · Latency distributions - full pool, one measurement window (2026-07-09, 108 parts each)</h2>
@@ -287,8 +301,8 @@ footer{margin-top:60px;color:var(--ink-soft);font-size:.8rem;border-top:1px soli
   <p class="meta">*gpt-oss via Cerebras direct returns no usage cost in the API response; ~$0.002/part from the Cerebras price sheet. Champion prompts add input tokens, so champion $/part runs above seed $/part for every model (gpt-5.5: $0.013 seed vs $0.024 champion, measured 2026-07-09).</p>
 
   <h2>4 · Cross-run reading</h2>
-  <div class="note gold"><b>Mechanism (established across all seven students).</b> Prompt optimization fixes <b>behaviour under the 15-second wall</b> — turn discipline, timeouts, answer form, syllabus style — not mathematical skill. Gains scale with prompt-shaped misbehaviour: gpt-5.5 (timeouts) and opus-4.8-fast-low (form/method style) gained most; gpt-5.4-none, already disciplined, gained nothing in four attempts.</div>
-  <div class="note"><b>Statistics honesty.</b> Only run-2 syllabus certifies at n=108 (p=.013). The stronger evidence is the pattern: 24 of 28 objective deltas positive (the single negative cell belongs to the null model). A null lever does not produce that. Per-objective certification arrives at full-corpus n≈1,400 (~2pp detectable).</div>
+  <div class="note gold"><b>Mechanism (established across all eight students).</b> Prompt optimization fixes <b>behaviour under the 15-second wall</b> — turn discipline, timeouts, answer form, syllabus style — not mathematical skill. Gains scale with prompt-shaped misbehaviour: gpt-5.5 and gpt-5.6-terra (timeouts) and opus-4.8-fast-low (form/method style) gained most; gpt-5.4-none, already disciplined, gained nothing in four attempts.</div>
+  <div class="note"><b>Statistics honesty.</b> Only run-2 syllabus certifies at n=108 (p=.013). The stronger evidence is the pattern: 28 of 32 objective deltas positive (the single negative cell belongs to the null model). A null lever does not produce that. Per-objective certification arrives at full-corpus n≈1,400 (~2pp detectable).</div>
   <div class="note warn"><b>Costs.</b> GEPA runs (est.; universal ledger live from late 2026-07-09): cheap students $15–30 · opus-4.8-fast-low ≈ $90 · opus-4.7-fast-low ≈ $260 across restarts · gemini ≈ $50 (opus teacher). Confirmations $6–10 each. All spend now flows through <span class="mono">usage_ledger.jsonl</span> per role × model.</div>
 
   
@@ -333,7 +347,7 @@ footer{margin-top:60px;color:var(--ink-soft);font-size:.8rem;border-top:1px soli
         <li><span class="fnum">13</span><b>In-sample validation always flatters:</b> +13-15pp val gains evaporated on held-out parts twice before the discipline was fixed.</li>
         <li><span class="fnum">14</span><b>Interleaved paired arms are mandatory:</b> sequential comparison was throttle-confounded — a "significant" +10pp shrank to honest error bars once both arms ran in the same seconds.</li>
         <li><span class="fnum">15</span><b>Provider availability is a first-class variable:</b> opus-4.7 had a 49/108-timeout window; gemini breached three windows in two days. Fallback chains + a ledger-driven monitor (every call logs duration) exist for this.</li>
-        <li><span class="fnum">16</span><b>n=108 certifies only effects &ge;7-9pp:</b> the pilot's +2-8pp objective gains are directionally consistent (24/28 positive deltas) and await full-corpus n&asymp;1,400 (~2pp power) for per-objective certification.</li>
+        <li><span class="fnum">16</span><b>n=108 certifies only effects &ge;7-9pp:</b> the pilot's +2-8pp objective gains are directionally consistent (28/32 positive deltas) and await full-corpus n&asymp;1,400 (~2pp power) for per-objective certification.</li>
       </ol>
     </div>
 
