@@ -337,6 +337,66 @@ footer{margin-top:60px;color:var(--ink-soft);font-size:.8rem;border-top:1px soli
       </ol>
     </div>
 
+    <h2 style="margin-top:40px">Stage D — routing results in numbers</h2>
+    <p class="sub">The evidence behind finding 7. Source: <span class="mono">reports/gate/stage_d/sweep.jsonl</span> (4,986 graded solves) and <span class="mono">route_table.json</span>.</p>
+
+    <h3 style="margin-top:24px">D0 sweep — every config on all 554 dev parts (one window each)</h3>
+    <div class="scroll" style="margin-top:10px">
+    <table>
+      <thead><tr><th>Config</th><th>Delivered (554 parts)</th><th>Timeouts</th><th>Solves</th></tr></thead>
+      <tbody>
+        <tr><td class="cfg">opus-4.7-fast-low champion</td><td class="mono">89.2%</td><td class="mono">24</td><td class="mono">554</td></tr>
+        <tr><td class="cfg">gpt-5.4-none seed (anchor)</td><td class="mono">86.6%</td><td class="mono">26</td><td class="mono">554</td></tr>
+        <tr><td class="cfg">opus-4.8-fast-low champion</td><td class="mono">84.7%</td><td class="mono">20</td><td class="mono">554</td></tr>
+        <tr><td class="cfg">gemini-3.5-0think champion</td><td class="mono">84.3%</td><td class="mono">125</td><td class="mono">1,108 (2 passes)</td></tr>
+        <tr><td class="cfg">gpt-5.5 champion</td><td class="mono">84.1%</td><td class="mono">35</td><td class="mono">554</td></tr>
+        <tr><td class="cfg">gpt-oss-120b paid champion</td><td class="mono">81.5%</td><td class="mono">32</td><td class="mono">1,108 (2 passes)</td></tr>
+        <tr><td class="cfg">gpt-5.4-low champion</td><td class="mono">80.9%</td><td class="mono">69</td><td class="mono">554</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="meta">Single-window realizations over the full dev corpus — not directly comparable to the board's 108-part held-out confirmations (different window, different parts). gpt-5.4-low's 69 timeouts are a window artifact; its accepted board window shows 6.</p>
+
+    <h3 style="margin-top:28px">Oracle gate — is there headroom, and can a router reach it?</h3>
+    <div class="scroll" style="margin-top:10px">
+    <table>
+      <thead><tr><th>Quantity</th><th>Value</th><th>Reading</th></tr></thead>
+      <tbody>
+        <tr><td class="cfg">Best single config</td><td class="mono">89.2%</td><td>opus-4.7-fast-low, this window</td></tr>
+        <tr><td class="cfg">Oracle (any config correct)</td><td class="mono">94.6%</td><td>ceiling a perfect router could reach</td></tr>
+        <tr><td class="cfg">Headroom</td><td class="mono">+5.4pp</td><td>exists — gate passed, routing worth fitting</td></tr>
+        <tr><td class="cfg">Error correlation &phi; (pairwise)</td><td class="mono">+0.47 to +0.58</td><td>models miss the <em>same</em> hard parts — headroom is scattered, not cell-shaped</td></tr>
+        <tr><td class="cfg">P(opus-4.7 correct | gpt-oss wrong)</td><td class="mono">0.47 (n=74)</td><td rowspan="3">escalation recovers under half of cheap-config misses</td></tr>
+        <tr><td class="cfg">P(opus-4.7 correct | gemini wrong)</td><td class="mono">0.40 (n=67)</td></tr>
+        <tr><td class="cfg">P(gpt-5.5 correct | cheap wrong)</td><td class="mono">0.28–0.31</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3 style="margin-top:28px">Fitted policy and the fold-1 verdict</h3>
+    <div class="scroll" style="margin-top:10px">
+    <table>
+      <thead><tr><th>Routing cell (answer type)</th><th>Routed config</th></tr></thead>
+      <tbody>
+        <tr><td class="cfg">mc_letter</td><td class="mono">opus-4.7-fast-low</td></tr>
+        <tr><td class="cfg">numeric</td><td class="mono">opus-4.7-fast-low</td></tr>
+        <tr><td class="cfg">other</td><td class="mono">opus-4.7-fast-low</td></tr>
+        <tr><td class="cfg">expression</td><td class="mono">gpt-5.5 &larr; the one non-opus cell</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="scroll" style="margin-top:14px">
+    <table>
+      <thead><tr><th>Frozen-policy replay on fold 1 (108 held-out parts)</th><th>Delivered</th></tr></thead>
+      <tbody>
+        <tr><td class="cfg">Routed (4-cell table above)</td><td class="mono">93.5%</td></tr>
+        <tr><td class="cfg">Best single (opus-4.7-fast-low)</td><td class="mono"><b>94.4%</b></td></tr>
+        <tr><td class="cfg">Oracle ceiling on fold 1</td><td class="mono">96.3%</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="meta">The replay grid was flat (fit accuracy 0.886 across every grain &times; &kappa; &times; &epsilon;), and the expression&rarr;gpt-5.5 cell was winner's curse: routing <em>lost</em> 0.9pp to best-single on held-out parts. Live paired run (D5.2) skipped — nothing to promote. Cell routing returns at full-corpus n&asymp;1,400.</p>
+
     <div class="note gold" style="margin-top:28px"><b>Pilot production configuration:</b> opus-4.7-fast-low champion for all parts + availability fallback chain (opus-4.8-fast-low &rarr; gpt-5.4-none seed) + timeout-triggered escalation. Next milestone: full-corpus Phase 0 (blocked on the Elevatar bank export, doc 17).</div>
   </div>
   <script>
