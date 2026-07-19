@@ -112,6 +112,7 @@ footer{margin-top:60px;color:var(--ink-soft);font-size:.8rem;border-top:1px soli
   <div class="tabs" role="tablist">
     <button role="tab" aria-selected="true" id="tb-board" onclick="showTab('board')">Results board</button>
     <button role="tab" aria-selected="false" id="tb-findings" onclick="showTab('findings')">Campaign findings</button>
+    <button role="tab" aria-selected="false" id="tb-difficulty" onclick="showTab('difficulty')">Difficulty &amp; experiments</button>
   </div>
   <div class="tabpane active" id="pane-board">
 <div class="kpis">
@@ -414,9 +415,82 @@ footer{margin-top:60px;color:var(--ink-soft);font-size:.8rem;border-top:1px soli
 
     <div class="note gold" style="margin-top:28px"><b>Pilot production configuration:</b> opus-4.7-fast-low champion for all parts + availability fallback chain (opus-4.8-fast-low &rarr; gpt-5.4-none seed) + timeout-triggered escalation. Next milestone: full-corpus Phase 0 (blocked on the Elevatar bank export, doc 17).</div>
   </div>
+
+  <div class="tabpane" id="pane-difficulty">
+    <h2 style="margin-top:26px">Post-pilot studies (2026-07-11 &rarr; 19) — what "hard" actually means, and whether it can be fixed at inference time</h2>
+    <p class="sub">Three linked studies on the 554-part dev corpus: an empirical-difficulty analysis (7-config sweep consensus), a controlled exemplar-injection experiment on the 57 hardest parts, and an ingest-time hardness predictor. Full reports: <a href="difficulty-analysis.md" download>difficulty-analysis.md</a> · <a href="hard-exemplar-results.md" download>hard-exemplar-results.md</a> · <a href="hardness-predictor.md" download>hardness-predictor.md</a></p>
+
+    <h3 style="margin-top:24px">A · Empirical difficulty — the pool defines "hard", not the mark allocation</h3>
+    <p class="meta" style="white-space:normal"><b>Definition.</b> A part's empirical difficulty = how many of the 7 pool configurations missed it in the full-corpus sweep (each config solving all 554 parts). <b>emp-easy</b> = 0 misses (370 parts), <b>emp-med</b> = 1&ndash;3 misses (127 parts), <b>emp-hard</b> = &ge;4 misses (57 parts, 10.3% of the corpus). 30 parts are missed by <em>all seven</em> configurations.</p>
+    <div class="scroll" style="margin-top:10px">
+    <table>
+      <thead><tr><th>Quantity</th><th>Value</th><th>Reading</th></tr></thead>
+      <tbody>
+        <tr><td class="cfg">Solved by all 7 configs</td><td class="mono">370 / 554 (66.8%)</td><td>two-thirds of the corpus is saturated</td></tr>
+        <tr><td class="cfg">Missed by all 7 configs</td><td class="mono">30 / 554 (5.4%)</td><td>consensus-hard core (and the first place to look for bad gold — 7 are transcription suspects, now in the review queue)</td></tr>
+        <tr><td class="cfg">Marks &harr; empirical difficulty (Spearman &rho;)</td><td class="mono">+0.148</td><td>the exam's own mark allocation barely predicts where models fail</td></tr>
+        <tr><td class="cfg">emp-hard rate by marks bucket</td><td class="mono">1mk 7.5% · 2mk 15.5% · 3+mk 10.3%</td><td>non-monotonic: <b>2-mark parts are the riskiest</b>, not high-mark parts</td></tr>
+        <tr><td class="cfg">Hard-tail composition by marks</td><td class="mono">44% 1-mark · 49% 2-mark · 7% 3+-mark</td><td>the hard tail is almost entirely low-mark parts</td></tr>
+        <tr><td class="cfg">Hard-tail composition by module</td><td class="mono">M3 Calculus 47% · M5 Trig 16%</td><td>calculus + trig own the tail; M4 Prob/stats is the safe module (3.8% emp-hard)</td></tr>
+        <tr><td class="cfg">Tech-active share of hard tail</td><td class="mono">94.7%</td><td>nearly all hard parts are technology-active (CAS calculator allowed)</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="meta">Consequence: marks stay valid as a <em>cost</em> axis (more marks = more work = more tokens) but must not be used as an <em>accuracy-risk</em> axis. "Model-hard" and "labelled-hard" are different priors — near-orthogonal in this corpus.</p>
+
+    <h3 style="margin-top:28px">Per-configuration delivered rate by empirical bucket (leave-one-out axis)</h3>
+    <p class="meta" style="white-space:normal">Each config is scored against a difficulty axis built from the <em>other six</em> configs only, so no config defines its own x-axis.</p>
+    <div class="scroll" style="margin-top:10px">
+    <table>
+      <thead><tr><th>Configuration</th><th>Overall</th><th>emp-easy</th><th>emp-med</th><th>emp-hard</th></tr></thead>
+      <tbody>
+        <tr><td class="cfg">opus-4.7-fast-low</td><td class="mono">89.2%</td><td class="mono">98.7%</td><td class="mono">86.9%</td><td class="mono"><b>43.1%</b></td></tr>
+        <tr><td class="cfg">gemini-3.5-0think</td><td class="mono">87.9%</td><td class="mono">98.1%</td><td class="mono">87.1%</td><td class="mono">38.2%</td></tr>
+        <tr><td class="cfg">gpt-5.4-none-seed</td><td class="mono">86.6%</td><td class="mono">99.5%</td><td class="mono">82.6%</td><td class="mono">27.4%</td></tr>
+        <tr><td class="cfg">gpt-oss-120b-paid</td><td class="mono">86.6%</td><td class="mono">97.9%</td><td class="mono">82.0%</td><td class="mono">36.8%</td></tr>
+        <tr><td class="cfg">opus-4.8-fast-low</td><td class="mono">84.7%</td><td class="mono">96.4%</td><td class="mono">77.2%</td><td class="mono">30.4%</td></tr>
+        <tr><td class="cfg">gpt-5.5</td><td class="mono">84.1%</td><td class="mono">96.4%</td><td class="mono">78.6%</td><td class="mono">22.4%</td></tr>
+        <tr><td class="cfg">gpt-5.4-low</td><td class="mono">80.9%</td><td class="mono">95.1%</td><td class="mono">67.7%</td><td class="mono">16.7%</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="meta">Easy parts are saturated (spread 4.4pp); the hard tail spreads 26.4pp. In absolute leaderboard parts, though, each bucket contributes comparably (~17&ndash;19 parts each) — the ranking is <em>not</em> set by the hard tail alone.</p>
+
+    <div class="note" style="margin-top:18px"><b>Timeout or capability?</b> On emp-hard parts, gemini-3.5-0think fails by <b>timeout 66%</b> of the time (a speed problem a longer wall could partly fix), while gpt-oss-120b-paid times out only <b>11.8%</b> and instead answers wrongly (a capability ceiling more time would not fix). The opus configs sit at ~27% timeout. Pooled: 60% of hard-tail failures are wrong answers, 36% timeouts.</div>
+    <div class="note" style="margin-top:12px"><b>Escalation ceiling.</b> Sending a cheap config's misses to the board leader recovers 40&ndash;47% of them — worth doing. But on parts <em>all six other</em> configs miss, the leader recovers only <b>14.3%</b>: the consensus-hard core is hard for everyone (pairwise error correlation &phi; mean +0.55). Closing it needs genuinely decorrelated models or different mechanisms, not more of the same leader.</div>
+
+    <h3 style="margin-top:32px">B · Exemplar-injection experiment — runtime few-shot is CLOSED (negative)</h3>
+    <p class="meta" style="white-space:normal"><b>Question.</b> Does injecting two worked exemplars (question + verified working + solve code from <em>other</em> parts — never the same stem or exam paper) into the prompt improve delivery on the 57 emp-hard parts? Three arms per config: <b>A</b> control (champion prompt only), <b>B</b> topic-similar exemplars, <b>C</b> hardness-similar exemplars (drawn from other hard parts). Two passes each; pass@2 = correct on at least one of the two.</p>
+    <div class="scroll" style="margin-top:10px">
+    <table>
+      <thead><tr><th>Configuration</th><th>A control</th><th>B topic-similar</th><th>C hard-similar</th><th>C vs A (fixed:broke, McNemar p)</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr><td class="cfg">opus-4.7-fast-low (board leader)</td><td class="mono"><b>40.4%</b></td><td class="mono">38.6%</td><td class="mono">33.3%</td><td class="mono">2:6, p=.289</td><td><b>hurts</b> — own-miss fix-rate drops 22%&rarr;7% under C</td></tr>
+        <tr><td class="cfg">opus-4.8-fast-low</td><td class="mono"><b>36.8%</b></td><td class="mono">29.8%</td><td class="mono">29.8%</td><td class="mono">4:8, p=.388</td><td><b>hurts</b></td></tr>
+        <tr><td class="cfg">gpt-oss-120b-paid (weak tier)</td><td class="mono">17.5%</td><td class="mono">21.1%</td><td class="mono">22.8%</td><td class="mono">6:3, p=.508</td><td>mild positive, null</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="note warn" style="margin-top:14px"><b>Verdict: no injection lever ships.</b> On capable models, exemplars of <em>other</em> hard questions displace the model's own (better) method priors — arm C cut opus-4.7's recovery of its own previous misses from 22% to 7%. Only the weakest model trended positive, and nothing certifies at n=57: a plain re-roll (arm A) alone recovers 22&ndash;25% of prior misses, so re-roll noise is the same size as any arm effect. Scope caveats: k=2 exemplars, hard parts only, 15-second wall. This coheres with finding 2 — the wall rewards behaviour, and extra prompt mass is extra behaviour to manage. Runtime injection closed; exemplars remain valuable as GEPA teacher fuel (training-time), which is already how the champions were built. Experiment cost: $164.53 clean run + ~$79 quarantined provider-breach windows.</div>
+
+    <h3 style="margin-top:32px">C · Hardness predictor — deployable as an escalation switch, not an injection switch</h3>
+    <p class="meta" style="white-space:normal"><b>Goal.</b> Predict "model-hard" (&ge;4 of 7 configs miss) from features observable at ingest time only — module, answer type, tech-active flag, source, question length, marks — before any model runs. Logistic regression, stem-grouped 5-fold cross-validation (parts from the same stem never straddle folds), scored out-of-fold.</p>
+    <div class="scroll" style="margin-top:10px">
+    <table>
+      <thead><tr><th>Model</th><th>OOF ROC AUC</th><th>OOF avg precision</th><th>Reading</th></tr></thead>
+      <tbody>
+        <tr><td class="cfg">Logistic, all ingest features</td><td class="mono"><b>0.713</b></td><td class="mono"><b>0.257</b></td><td>2.5&times; the 0.103 base rate; calibration effectively exact</td></tr>
+        <tr><td class="cfg">Naive rule (M3/M5 AND tech-active)</td><td class="mono">0.647</td><td class="mono">&mdash;</td><td>usable fallback; flags a third of all parts</td></tr>
+        <tr><td class="cfg">Marks-only logistic</td><td class="mono">0.530</td><td class="mono">0.114</td><td>coin flip — confirms the marks proxy is not a risk axis</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="meta" style="margin-top:10px">Recommended operating point for escalation: threshold &asymp;0.18 flags 20% of incoming parts and catches ~51% of the genuinely hard ones (precision 0.266). Strongest features: tech-active +1.22 log-odds, M4 Prob/stats &minus;0.99 (protective), official-VCAA source &minus;0.85 (commercial trials harder). Per-fold AUC spreads 0.55&ndash;0.88 (only 57 positives) — certify at full corpus before hard-wiring thresholds.</p>
+    <div class="note gold" style="margin-top:14px"><b>How the three studies compose.</b> The predictor flags likely-hard parts at ingest &rarr; flagged parts route to the strongest config with a fallback chain (worth 40&ndash;47% recovery) — <em>not</em> to exemplar injection, which the experiment closed. The consensus-hard core (~5% of parts, 14% recoverable) is the full-corpus frontier: model diversity, tools, or a longer wall — plus gold-reference review, since 7 of the 30 missed-by-all parts are transcription suspects.</div>
+  </div>
   <script>
   function showTab(t){
-    for (const k of ['board','findings']){
+    for (const k of ['board','findings','difficulty']){
       document.getElementById('pane-'+k).classList.toggle('active', k===t);
       document.getElementById('tb-'+k).setAttribute('aria-selected', k===t ? 'true':'false');
     }

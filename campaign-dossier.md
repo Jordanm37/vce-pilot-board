@@ -9,7 +9,9 @@ access to the repository. Every number comes from the campaign's own logs. Compi
 2026-07-10 from the canonical sources: `reports/gate/stage_c/FINDINGS.md`,
 `reports/gate/stage_c/RESULTS_BOARD.md`, `docs/architecture-review/16` (full-dataset
 plan) and `18` (Stage D routing plan), `reports/gate/stage_d/route_table.json`, and the
-universal usage ledger.
+universal usage ledger. Part II (sections 13-16, appended 2026-07-19) adds the
+post-pilot studies: empirical difficulty analysis, the exemplar-injection experiment
+(closed negative), and the ingest-time hardness predictor.
 
 ---
 
@@ -692,3 +694,126 @@ logs, checkpointed optimizer state, resume flags).
   held-out) — both are correct measurements of what they measure.
 - Two dropped bank references and the transcription-flag queue await human decisions;
   nothing downstream currently depends on them.
+
+---
+
+# Part II — post-pilot addendum (2026-07-11 to 2026-07-19)
+
+Three linked studies completed after the board was published. Full reports live beside
+this dossier: `DIFFICULTY_ANALYSIS.md`, `HARD_EXEMPLAR_RESULTS.md`,
+`HARDNESS_PREDICTOR.md` (published on the board page as `difficulty-analysis.md`,
+`hard-exemplar-results.md`, `hardness-predictor.md`).
+
+## 13. Empirical difficulty versus the exam-marks label
+
+Method: a full-corpus seed/champion sweep put all 7 pool configurations over all 554
+dev parts (persisted per-part in `reports/gate/stage_d/sweep_seeds.jsonl` and
+`sweep.jsonl`). A part's empirical difficulty is the number of configurations that
+missed it: emp-easy = 0 misses (370 parts, 66.8%), emp-med = 1-3 (127), emp-hard =
+4 or more (57 parts, 10.3%). 30 parts (5.4%) are missed by all seven.
+
+Findings:
+
+- The distribution is bimodal: a large solved-by-all mass and a sharp missed-by-all
+  spike. The corpus is mostly saturated, with a small consensus-hard core.
+- The marks label (how many marks the exam awards the part) predicts empirical
+  difficulty only weakly and non-monotonically: Spearman rho = +0.148. The 2-mark
+  parts are the riskiest (15.5% emp-hard), above the 3-plus-mark parts (10.3%);
+  the hard tail is 93% one- and two-mark parts. "Model-hard" and "labelled-hard"
+  are different priors. Marks stay valid as a cost axis (marks track work, so tokens
+  and time) but not as an accuracy-risk axis.
+- Module concentration: M3 Calculus holds 47% of the hard tail (emp-hard rate 15.3%
+  vs 10.3% base); M5 Trigonometry 16%; M4 Probability/statistics is the safe module
+  (3.8%). 94.7% of hard parts are technology-active. The commercial trial papers run
+  about twice as hard as official VCAA papers (21.5% vs 11.9% emp-hard).
+- Failure anatomy on the hard tail: pooled, 60% wrong answers, 36% timeouts, 4%
+  errors — but the mix is config-specific. gemini-3.5-0think fails by timeout 66% of
+  the time (a speed gap a longer wall could partly recover); gpt-oss-120b-paid times
+  out only 11.8% and answers wrongly instead (a capability ceiling). The opus configs
+  sit near 27% timeout.
+- Escalation ceiling: routing a cheap config's misses to the board leader recovers
+  40-47% of them, but only 14.3% of the parts all six other configs also missed.
+  Pairwise error correlation (phi) averages +0.55 — the pool misses the same parts.
+  The consensus-hard core needs decorrelated models, tools, or a longer wall, not
+  more of the same leader. It is also the first place to audit gold: 7 of the 30
+  missed-by-all parts are template-doubling transcription suspects, now in the
+  human-review queue.
+- Leaderboard nuance (verifier-corrected): the hard tail carries the widest rate
+  spread (43.1% down to 16.7% delivered), but in absolute parts each bucket
+  contributes comparably (~17-19 parts) to the leaderboard gap. The ranking is not
+  set by the hard tail alone.
+
+## 14. Exemplar-injection experiment on the 57 hardest parts (closed: negative)
+
+Hypothesis: injecting worked exemplars (question + verified working + solve code from
+other parts) into the prompt at inference time improves delivery on model-hard parts.
+Design: 3 configurations (opus-4.7-fast-low and opus-4.8-fast-low champions, plus
+gpt-oss-120b-paid as the weak tier) x 3 arms x 57 parts x 2 passes, interleaved,
+graded by the standard rule-plus-judge pipeline. Arms: A control (champion prompt
+only), B topic-similar exemplars (same subtopic, then module + answer type, then
+module), C hardness-similar exemplars (from parts the sweep missed at least twice).
+Leakage rules, independently verified with zero violations: an exemplar is never the
+target part, never shares its stem, never comes from the same exam paper.
+
+Results (pass@2, correct on at least one of two passes):
+
+| Config | A | B | C | C vs A fixed:broke | McNemar p |
+|---|---|---|---|---|---|
+| opus-4.7-fast-low | 40.4% | 38.6% | 33.3% | 2:6 | .289 |
+| opus-4.8-fast-low | 36.8% | 29.8% | 29.8% | 4:8 | .388 |
+| gpt-oss-120b-paid | 17.5% | 21.1% | 22.8% | 6:3 | .508 |
+
+Verdict: runtime few-shot injection is closed. On capable models it is directionally
+harmful — under arm C, opus-4.7's recovery of its own previous misses fell from 22%
+to 7%, consistent with exemplars of other questions displacing the model's own better
+method priors. Only the weakest model trended positive, and nothing certifies at
+n=57: arm A alone (a plain re-roll) recovers 22-25% of prior misses, so re-roll noise
+equals any arm effect measured. Scope caveats: k=2 exemplars, hard parts only, the
+15-second wall. This coheres with finding 2 (prompts fix behaviour, not skill — and
+added prompt mass is added behaviour to manage). Exemplars remain valuable as GEPA
+teacher fuel at training time, which is how the champions were already built.
+
+Cost accounting (owned): $164.53 clean run (hard parts cost 3-5x the corpus average
+per part, which an early estimate missed) plus ~$79 of quarantined windows during an
+Anthropic fast-endpoint congestion incident. Method lesson from that incident: the
+window breach guard was calibrated on corpus-average timeout rates (20%), but healthy
+windows on the 57-part hard tail run 19-23% timeouts, so the guard false-alarmed;
+recalibrated to 40% (about 2x the hard-tail baseline). Quarantined rows are kept in
+`hard_exemplar_breached_*.jsonl`; clean data (1,026 rows) in
+`hard_exemplar_runs.jsonl`.
+
+## 15. Ingest-time hardness predictor
+
+Goal: flag likely model-hard parts before any model runs, from ingest-observable
+features only (module, answer type, technology-active flag, source, question length,
+marks, Elevatar difficulty rank). Model: logistic regression (L2), stem-grouped
+5-fold cross-validation so parts of one stem never straddle folds; all metrics
+out-of-fold.
+
+| Model | OOF ROC AUC | OOF avg precision |
+|---|---|---|
+| Logistic, all features | 0.713 | 0.257 (2.5x the 0.103 base rate) |
+| Naive rule (M3/M5 AND tech-active) | 0.647 | — |
+| Marks-only logistic | 0.530 | 0.114 |
+
+Calibration is effectively exact, so the score reads as a probability. Strongest
+weights (log-odds): tech-active +1.22, M4 module -0.99 (protective), official-VCAA
+source -0.85 (commercial trials harder), Elevatar difficulty +0.59, question length
++0.38; raw marks contribute almost nothing (+0.13), exactly as rho = +0.148
+predicted. Recommended operating point for escalation: threshold ~0.18 flags 20% of
+incoming parts and catches ~51% of the genuinely hard ones (precision 0.266).
+
+Deployment verdict: a coarse escalation/routing switch, not a precise gate and not an
+injection switch (section 14 closed that use). Per-fold AUC spreads 0.55-0.88 because
+only 57 positives exist; certify at full corpus (with a leave-one-year-out check)
+before hard-wiring thresholds.
+
+## 16. How the three studies compose
+
+Predictor flags likely-hard parts at ingest; flagged parts route to the strongest
+configuration with the availability fallback chain (worth 40-47% recovery of
+cheap-config misses); exemplar injection is not applied anywhere. The residual
+frontier is the consensus-hard core (~5% of parts, 14% recoverable by escalation):
+full-corpus options are genuine model diversity, tool changes, a longer wall for
+timeout-bound configs — and gold-reference review, since a quarter of the
+missed-by-all set is suspected transcription damage rather than difficulty.
